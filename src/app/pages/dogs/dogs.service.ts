@@ -1,67 +1,82 @@
 import { Injectable } from '@angular/core';
-import { Observable, of } from 'rxjs';
+import { Store } from '@ngrx/store';
+import { combineLatest, map, Observable } from 'rxjs';
+import {
+  getProfileDataIfNeeded,
+  setDogAsFavorite,
+} from '../profile/store/profile.actions';
+import { selectProfileDataLoadState } from '../profile/store/profile.selectors';
 import { DogsVM } from './dogs.vm';
+import { Dog } from './interfaces/dog.interface';
+import { getDogsIfNeeded } from './store/dogs.actions';
+import { selectDogsLoadState } from './store/dogs.selectors';
 
 @Injectable()
 export class DogsService {
   public readonly vm$: Observable<DogsVM>;
 
-  constructor() {
-    const loadingVm: DogsVM = {
-      dataIsLoading: true,
-      dataLoadError: false,
-      dogs: null,
-    };
+  constructor(private readonly store$: Store) {
+    this.vm$ = combineLatest([
+      this.store$.select(selectDogsLoadState),
+      this.store$.select(selectProfileDataLoadState),
+    ]).pipe(
+      map(([dogsLoadState, profileDataLoadState]): DogsVM => {
+        if (dogsLoadState.inProgress || profileDataLoadState.inProgress) {
+          return {
+            dataIsLoading: true,
+            dataLoadError: false,
+            dogs: null,
+          };
+        }
 
-    const errorVm: DogsVM = {
-      dataIsLoading: false,
-      dataLoadError: true,
-      dogs: null,
-    };
+        if (dogsLoadState.error || profileDataLoadState.error) {
+          return {
+            dataIsLoading: false,
+            dataLoadError: true,
+            dogs: null,
+          };
+        }
 
-    const loadedVm: DogsVM = {
-      dataIsLoading: false,
-      dataLoadError: false,
-      dogs: [
-        {
-          id: '1',
-          name: 'Beagle',
-          imgSrc: '/assets/images/beagle.jpg',
-          favorite: true,
-          favoriteChangeInProgress: false,
-        },
-        {
-          id: '2',
-          name: 'Mastiff',
-          imgSrc: '/assets/images/mastiff.jpg',
-          favorite: false,
-          favoriteChangeInProgress: false,
-        },
-        {
-          id: '3',
-          name: 'Pug',
-          imgSrc: '/assets/images/pug.jpg',
-          favorite: false,
-          favoriteChangeInProgress: false,
-        },
-        {
-          id: '4',
-          name: 'Shiba inu',
-          imgSrc: '/assets/images/shiba-inu.jpg',
-          favorite: false,
-          favoriteChangeInProgress: true,
-        },
-      ],
-    };
+        const dogs = dogsLoadState.dogs!;
+        const profileData = profileDataLoadState.profileData!;
 
-    this.vm$ = of(loadedVm);
+        return {
+          dataIsLoading: false,
+          dataLoadError: false,
+          dogs: dogs.map((dog): Dog => {
+            return {
+              id: dog.id,
+              imgSrc: dog.imgSrc,
+              name: dog.name,
+              favorite: profileData.favoriteDogIds.includes(dog.id),
+              favoriteChangeInProgress:
+                profileDataLoadState.dogIdsOfDogsUnderFavoriteChange.includes(
+                  dog.id
+                ),
+            };
+          }),
+        };
+      })
+    );
+
+    this.loadData();
   }
 
   public retryLoad(): void {
-    // TODO implement
+    this.loadData();
   }
 
   public setFavorite(dogId: string, newFavoriteValue: boolean): void {
-    // TODO implement
+    this.store$.dispatch(
+      setDogAsFavorite({
+        dogId,
+        favorite: newFavoriteValue,
+      })
+    );
+  }
+
+  private loadData(): void {
+    this.store$.dispatch(getDogsIfNeeded());
+    this.store$.dispatch(getProfileDataIfNeeded());
   }
 }

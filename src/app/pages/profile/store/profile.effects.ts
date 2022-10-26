@@ -5,6 +5,7 @@ import {
   catchError,
   combineLatest,
   map,
+  mergeMap,
   Observable,
   of,
   switchMap,
@@ -74,7 +75,7 @@ export class ProfileEffects {
   public setDogAsFavorite$ = createEffect(() => {
     return this.actions$.pipe(
       ofType(setDogAsFavorite),
-      switchMap(({ dogId, favorite }) => {
+      mergeMap(({ dogId, favorite }) => {
         return this.setMockDogAsFavorite$(dogId, favorite).pipe(
           map(() => {
             return setDogAsFavoriteSuccess({

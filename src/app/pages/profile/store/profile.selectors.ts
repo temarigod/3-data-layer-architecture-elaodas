@@ -20,3 +20,14 @@ export const selectDogIdsOfDogsUnderFavoriteChange = createSelector(
   selectProfileFeature,
   (state) => state.dogIdsOfDogsUnderFavoriteChange
 );
+export const selectProfileDataLoadState = createSelector(
+  selectProfileFeature,
+  (state) => {
+    return {
+      inProgress: state.profileDataLoadInProgress,
+      error: state.profileDataLoadError,
+      profileData: state.profileData,
+      dogIdsOfDogsUnderFavoriteChange: state.dogIdsOfDogsUnderFavoriteChange,
+    };
+  }
+);
