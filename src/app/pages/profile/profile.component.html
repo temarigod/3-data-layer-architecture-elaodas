@@ -1,1 +1,19 @@
-<p>Profile page yaaay!</p>
+<ng-container *ngrxLet="profileService.vm$ as vm">
+  <div *ngIf="vm.profileDataIsLoading">Loading...</div>
+  <div *ngIf="vm.profileDataError">
+    An error occured
+    <button type="button" (click)="profileService.retryLoad()">Retry</button>
+  </div>
+  <div *ngIf="vm.profileData">
+    <div>name: {{ vm.profileData!.name }}</div>
+    <div>age: {{ vm.profileData!.age }} years old</div>
+    <div>
+      favorite dogs count: {{ vm.profileData!.favoriteDogsCount }} years old
+      {{
+        vm.profileData?.favoriteDogsCountChangeInProgress
+          ? " (might change in a moment)"
+          : ""
+      }}
+    </div>
+  </div>
+</ng-container>
