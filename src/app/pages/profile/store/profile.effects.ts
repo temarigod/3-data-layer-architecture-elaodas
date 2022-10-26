@@ -1,18 +1,9 @@
 import { Injectable } from '@angular/core';
 import { Actions, concatLatestFrom, createEffect, ofType } from '@ngrx/effects';
 import { Store } from '@ngrx/store';
-import {
-  catchError,
-  combineLatest,
-  map,
-  mergeMap,
-  Observable,
-  of,
-  switchMap,
-  timer,
-} from 'rxjs';
+import { catchError, combineLatest, map, mergeMap, of, switchMap } from 'rxjs';
+import { ProfileDataApiService } from 'src/app/api/services/profile-data-api.service';
 import { noopAction } from 'src/app/root.actions';
-import { ProfileData } from './interfaces/profile-data.interface';
 import {
   getProfileData,
   getProfileDataError,
@@ -52,10 +43,15 @@ export class ProfileEffects {
     return this.actions$.pipe(
       ofType(getProfileData),
       switchMap(() => {
-        return this.getMockProfileData$().pipe(
+        return this.profileDataApiService.getProfileData$().pipe(
           map((profileData) => {
             return getProfileDataSuccess({
-              profileData,
+              profileData: {
+                birthDate: profileData.birth_date,
+                favoriteDogIds: profileData.favorite_dog_ids,
+                firstName: profileData.first_name,
+                lastName: profileData.last_name,
+              },
             });
           }),
           catchError((err) => {
@@ -76,7 +72,7 @@ export class ProfileEffects {
     return this.actions$.pipe(
       ofType(setDogAsFavorite),
       mergeMap(({ dogId, favorite }) => {
-        return this.setMockDogAsFavorite$(dogId, favorite).pipe(
+        return this.profileDataApiService.setDogFavorite$(dogId, favorite).pipe(
           map(() => {
             return setDogAsFavoriteSuccess({
               dogId,
@@ -100,26 +96,7 @@ export class ProfileEffects {
 
   constructor(
     private readonly actions$: Actions,
-    private readonly store: Store
+    private readonly store: Store,
+    private readonly profileDataApiService: ProfileDataApiService
   ) {}
-
-  private getMockProfileData$(): Observable<ProfileData> {
-    return timer(2000).pipe(
-      map((): ProfileData => {
-        return {
-          birthDate: '1995-01-01',
-          favoriteDogIds: ['1'],
-          firstName: 'John',
-          lastName: 'Doe',
-        };
-      })
-    );
-  }
-
-  private setMockDogAsFavorite$(
-    dogId: string,
-    favorite: boolean
-  ): Observable<void> {
-    return timer(2000).pipe(map(() => void 0));
-  }
 }

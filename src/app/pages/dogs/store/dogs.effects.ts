@@ -1,15 +1,8 @@
 import { Injectable } from '@angular/core';
 import { Actions, concatLatestFrom, createEffect, ofType } from '@ngrx/effects';
 import { Store } from '@ngrx/store';
-import {
-  catchError,
-  combineLatest,
-  map,
-  Observable,
-  of,
-  switchMap,
-  timer,
-} from 'rxjs';
+import { catchError, combineLatest, map, of, switchMap } from 'rxjs';
+import { DogsApiService } from 'src/app/api/services/dogs-api.service';
 import { noopAction } from 'src/app/root.actions';
 import {
   getDogs,
@@ -45,10 +38,16 @@ export class DogsEffects {
     return this.actions$.pipe(
       ofType(getDogs),
       switchMap(() => {
-        return this.getMockDogs$().pipe(
+        return this.dogsApiService.getDogs$().pipe(
           map((dogs) => {
             return getDogsSuccess({
-              dogs,
+              dogs: dogs.map((dog): Dog => {
+                return {
+                  id: dog.id,
+                  imgSrc: dog.img_src,
+                  name: dog.name,
+                };
+              }),
             });
           }),
           catchError((err) => {
@@ -67,35 +66,7 @@ export class DogsEffects {
 
   constructor(
     private readonly actions$: Actions,
-    private readonly store: Store
+    private readonly store: Store,
+    private readonly dogsApiService: DogsApiService
   ) {}
-
-  private getMockDogs$(): Observable<Dog[]> {
-    return timer(2000).pipe(
-      map((): Dog[] => {
-        return [
-          {
-            id: '1',
-            imgSrc: '/assets/images/beagle.jpg',
-            name: 'Beagle',
-          },
-          {
-            id: '2',
-            imgSrc: '/assets/images/mastiff.jpg',
-            name: 'Mastiff',
-          },
-          {
-            id: '3',
-            imgSrc: '/assets/images/pug.jpg',
-            name: 'Pug',
-          },
-          {
-            id: '4',
-            imgSrc: '/assets/images/shiba-inu.jpg',
-            name: 'Shiba inu',
-          },
-        ];
-      })
-    );
-  }
 }
