@@ -1,1 +1,17 @@
-<p>Dogs page yaaay!</p>
+<ng-container *ngrxLet="dogsService.vm$ as vm">
+  <div *ngIf="vm.dataIsLoading">Loading...</div>
+  <div *ngIf="vm.dataLoadError">
+    An error occured
+    <button type="button" (click)="dogsService.retryLoad()">Retry</button>
+  </div>
+  <div class="d-flex flex-wrap gap-3" *ngIf="vm.dogs">
+    <app-dog
+      *ngFor="let dog of vm.dogs; trackBy: trackBy"
+      [imgSrc]="dog.imgSrc"
+      [name]="dog.name"
+      [favorite]="dog.favorite"
+      [favoriteChangeInProgress]="dog.favoriteChangeInProgress"
+      (favoriteClick)="dogsService.setFavorite(dog.id, !dog.favorite)"
+    ></app-dog>
+  </div>
+</ng-container>

@@ -1,0 +1,9 @@
+<img [src]="imgSrc" />
+<div>{{ name }}</div>
+<button
+  type="button"
+  (click)="!favoriteChangeInProgress && favoriteClick.emit()"
+>
+  {{ favorite ? "★" : "☆" }}
+  {{ favoriteChangeInProgress ? " changing..." : "" }}
+</button>
